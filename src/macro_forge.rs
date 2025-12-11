@@ -21,10 +21,9 @@ pub struct MacroBot {
 
 impl MacroBot {
     pub fn new() -> Self {
-        let enigo = Enigo::new(&Settings::default()).expect("Nie udało się połączyć z myszką");
+        let enigo = Enigo::new(&Settings::default()).expect("Not found a pointer!");
         Self { enigo }
     }
-
     pub fn click_release(&mut self) -> Result<(), Box<dyn Error>> {
         thread::sleep(Duration::from_millis(500));
         self.enigo.button(Button::Left, Press)?;
@@ -121,151 +120,147 @@ pub fn clicker(is_running: Arc<AtomicBool>, is_busy: Arc<AtomicBool>) {
     let mut rng = rand::rng();
 
     loop {
-        if is_running.load(sync::atomic::Ordering::Relaxed) {
-            if !is_busy.load(sync::atomic::Ordering::Relaxed) {
-                if let Ok(active_window) = get_active_window() {
-                    let title = active_window.title.to_lowercase();
-                    if title.contains(TARGET_WINDOW_NAME) {
-                        let _ = bot.button_click();
-
-                        let random_delay = rng.random_range(600..900);
-                        thread::sleep(Duration::from_millis(random_delay));
-                    } else {
-                        thread::sleep(Duration::from_millis(1000));
-                    }
-                } else {
-                    thread::sleep(Duration::from_millis(200));
-                }
-            } else {
-                thread::sleep(Duration::from_millis(500));
-            }
-        } else {
+        if !is_running.load(sync::atomic::Ordering::Relaxed) {
             thread::sleep(Duration::from_millis(500));
+            continue;
         }
+        if is_busy.load(sync::atomic::Ordering::Relaxed) {
+            thread::sleep(Duration::from_millis(500));
+            continue;
+        }
+
+        let Ok(title) = get_active_window().map(|w| w.title.to_lowercase()) else {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        };
+        if !title.contains(TARGET_WINDOW_NAME) {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        }
+        let _ = bot.button_click();
+
+        let random_delay = rng.random_range(300..450);
+        thread::sleep(Duration::from_millis(random_delay));
     }
 }
 
 pub fn luck(is_luck: Arc<AtomicBool>, is_busy: Arc<AtomicBool>, potion_key: Arc<Mutex<String>>) {
     let mut bot = MacroBot::new();
-
     let mut last_potion_time = Instant::now() - Duration::from_secs(300);
 
     loop {
-        if is_luck.load(sync::atomic::Ordering::Relaxed) {
-            if let Ok(active_window) = get_active_window() {
-                let title = active_window.title.to_lowercase();
-                if title.contains(TARGET_WINDOW_NAME) {
-                    if last_potion_time.elapsed() >= Duration::from_secs(300) {
-                        if is_busy
-                            .compare_exchange(
-                                false,
-                                true,
-                                sync::atomic::Ordering::Acquire,
-                                sync::atomic::Ordering::Relaxed,
-                            )
-                            .is_ok()
-                        {
-                            let key_char = potion_key.lock().chars().next().unwrap_or('3');
-
-                            let _ = bot.key_click(key_char);
-                            thread::sleep(Duration::from_millis(100));
-
-                            let _ = bot.enigo.button(Button::Left, Press);
-                            thread::sleep(Duration::from_millis(2500));
-                            let _ = bot.enigo.button(Button::Left, Release);
-
-                            let _ = bot.key_click('1');
-
-                            last_potion_time = Instant::now();
-                            is_busy.store(false, sync::atomic::Ordering::Relaxed);
-                        } else {
-                            thread::sleep(Duration::from_millis(100));
-                        }
-                    } else {
-                        thread::sleep(Duration::from_millis(200));
-                    }
-                } else {
-                    thread::sleep(Duration::from_millis(1000));
-                }
-            } else {
-                thread::sleep(Duration::from_millis(200));
-            }
-        } else {
+        if !is_luck.load(sync::atomic::Ordering::Relaxed) {
             thread::sleep(Duration::from_millis(500));
+            continue;
         }
+        let Ok(title) = get_active_window().map(|w| w.title.to_lowercase()) else {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        };
+        if !title.contains(TARGET_WINDOW_NAME) {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        }
+        if last_potion_time.elapsed() <= Duration::from_secs(300) {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        }
+        if is_busy
+            .compare_exchange(
+                false,
+                true,
+                sync::atomic::Ordering::Acquire,
+                sync::atomic::Ordering::Relaxed,
+            )
+            .is_err()
+        {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        }
+        let key_char = potion_key.lock().chars().next().unwrap_or('3');
+
+        let _ = bot.key_click(key_char);
+        thread::sleep(Duration::from_millis(100));
+
+        let _ = bot.enigo.button(Button::Left, Press);
+        thread::sleep(Duration::from_millis(2500));
+        let _ = bot.enigo.button(Button::Left, Release);
+
+        let _ = bot.key_click('1');
+
+        last_potion_time = Instant::now();
+        is_busy.store(false, sync::atomic::Ordering::Relaxed);
     }
 }
 
 pub fn sell(is_sell: Arc<AtomicBool>, is_busy: Arc<AtomicBool>, time_key: Arc<Mutex<u8>>) {
     let mut bot = MacroBot::new();
-
     let mut last_sell_time = Instant::now() - Duration::from_mins(*time_key.lock() as u64);
 
     loop {
-        if is_sell.load(sync::atomic::Ordering::Relaxed) {
-            if let Ok(active_win) = get_active_window() {
-                let title = active_win.title.to_lowercase();
-                if title.contains(TARGET_WINDOW_NAME) {
-                    if last_sell_time.elapsed() >= Duration::from_mins(*time_key.lock() as u64) {
-                        if is_busy
-                            .compare_exchange(
-                                false,
-                                true,
-                                sync::atomic::Ordering::Acquire,
-                                sync::atomic::Ordering::Relaxed,
-                            )
-                            .is_ok()
-                        {
-                            thread::sleep(Duration::from_millis(1000));
-
-                            let _ = bot.key_click('1');
-                            thread::sleep(Duration::from_millis(1000));
-
-                            let _ = bot.key_click('t');
-                            thread::sleep(Duration::from_millis(1000));
-
-                            let _ = bot.smooth_move(730, 1050, 30, 20);
-                            thread::sleep(Duration::from_millis(500));
-                            let _ = bot.click_release();
-
-                            let _ = bot.smooth_move(1770, 490, 60, 40);
-                            thread::sleep(Duration::from_millis(500));
-                            let _ = bot.click_release();
-
-                            let _ = bot.smooth_move(1280, 900, 30, 20);
-                            thread::sleep(Duration::from_millis(500));
-                            let _ = bot.click_release();
-
-                            let _ = bot.smooth_move(1280, 1000, 30, 20);
-                            thread::sleep(Duration::from_millis(500));
-                            let _ = bot.click_release();
-
-                            let _ = bot.smooth_move(1050, 750, 30, 20);
-                            thread::sleep(Duration::from_millis(500));
-                            let _ = bot.click_release();
-
-                            let _ = bot.smooth_move(1850, 300, 30, 20);
-                            thread::sleep(Duration::from_millis(500));
-                            let _ = bot.click_release();
-
-                            let _ = bot.key_click('1');
-
-                            last_sell_time = Instant::now();
-                            is_busy.store(false, sync::atomic::Ordering::Relaxed);
-                        } else {
-                            thread::sleep(Duration::from_millis(100));
-                        }
-                    } else {
-                        thread::sleep(Duration::from_millis(200));
-                    }
-                } else {
-                    thread::sleep(Duration::from_millis(1000));
-                }
-            } else {
-                thread::sleep(Duration::from_millis(200));
-            }
-        } else {
+        if !is_sell.load(sync::atomic::Ordering::Relaxed) {
             thread::sleep(Duration::from_millis(500));
+            continue;
         }
+        let Ok(title) = get_active_window().map(|w| w.title.to_lowercase()) else {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        };
+        if !title.contains(TARGET_WINDOW_NAME) {
+            thread::sleep(Duration::from_millis(500));
+            continue;
+        }
+        if last_sell_time.elapsed() <= Duration::from_mins(*time_key.lock() as u64) {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        }
+        if is_busy
+            .compare_exchange(
+                false,
+                true,
+                sync::atomic::Ordering::Acquire,
+                sync::atomic::Ordering::Relaxed,
+            )
+            .is_err()
+        {
+            thread::sleep(Duration::from_millis(200));
+            continue;
+        }
+        thread::sleep(Duration::from_millis(1000));
+
+        let _ = bot.key_click('1');
+        thread::sleep(Duration::from_millis(1000));
+
+        let _ = bot.key_click('t');
+        thread::sleep(Duration::from_millis(1000));
+
+        let _ = bot.smooth_move(730, 1050, 30, 20);
+        thread::sleep(Duration::from_millis(500));
+        let _ = bot.click_release();
+
+        let _ = bot.smooth_move(1770, 490, 60, 40);
+        thread::sleep(Duration::from_millis(500));
+        let _ = bot.click_release();
+
+        let _ = bot.smooth_move(1280, 900, 30, 20);
+        thread::sleep(Duration::from_millis(500));
+        let _ = bot.click_release();
+
+        let _ = bot.smooth_move(1280, 1000, 30, 20);
+        thread::sleep(Duration::from_millis(500));
+        let _ = bot.click_release();
+
+        let _ = bot.smooth_move(1050, 750, 30, 20);
+        thread::sleep(Duration::from_millis(500));
+        let _ = bot.click_release();
+
+        let _ = bot.smooth_move(1850, 300, 30, 20);
+        thread::sleep(Duration::from_millis(500));
+        let _ = bot.click_release();
+
+        let _ = bot.key_click('1');
+
+        last_sell_time = Instant::now();
+        is_busy.store(false, sync::atomic::Ordering::Relaxed);
     }
 }

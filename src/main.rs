@@ -17,6 +17,7 @@ fn main() {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([300.0, 250.0])
             .with_resizable(false)
+            .with_maximize_button(false)
             .with_always_on_top()
             .with_decorations(true)
             .with_transparent(true)
