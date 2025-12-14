@@ -3,7 +3,7 @@
 
 <div align="center">
     <img width="256" height="256" alt="icon" src="https://github.com/user-attachments/assets/fb957b85-d456-4e68-a571-45f9d907cfa8" />
-<img width="302" height="282" alt="image" src="https://github.com/user-attachments/assets/2e347676-c9e4-4853-8be8-8a7302a3d6ad" />
+<img width="302" height="282" alt="image" src="https://github.com/user-attachments/assets/f67c1d34-a8e4-4089-8060-81243e707349" />
 </div>
 
 ## 🚀 Features
