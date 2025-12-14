@@ -10,7 +10,7 @@
 * **⛏️ Mining Clicker** – Automated mining to save your mouse and time.
 * **🍀 Luck Potion** – Automatically manages and consumes luck potions.
 * **💰 Auto Sell** – Prevents inventory overflow by selling resources automatically.
-* **💾 Config Persistence** – Automatically saves and loads your settings (Keys, Timers) to `settings.json`.
+* **💾 Config Persistence** – Automatically saves and loads your settings (Keys, Timers, Window Position) to `settings.json`.
 
 ## 🛠️ Tech Stack & Dependencies
 
