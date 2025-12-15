@@ -2,15 +2,15 @@
 **TFM** is a lightweight, high-performance automation tool for the "The Forge" game mode in Roblox. Built entirely in **Rust**, it focuses on speed, safety, and low resource usage.
 
 <div align="center">
-    <img width="256" height="256" alt="icon" src="https://github.com/user-attachments/assets/fb957b85-d456-4e68-a571-45f9d907cfa8" />
-<img width="302" height="282" alt="image" src="https://github.com/user-attachments/assets/f67c1d34-a8e4-4089-8060-81243e707349" />
+<img width="256" height="256" alt="icon" src="https://github.com/user-attachments/assets/6809e8d8-fd37-4279-877b-b14da316c515" />
+<img width="302" height="282" alt="image" src="https://github.com/user-attachments/assets/60556a6a-09de-4b8e-a38b-e26cee16a89b" />
 </div>
 
 ## 🚀 Features
 * **⛏️ Mining Clicker** – Automated mining to save your mouse and time.
 * **🍀 Luck Potion** – Automatically manages and consumes luck potions.
 * **💰 Auto Sell** – Prevents inventory overflow by selling resources automatically.
-* **💾 Config Persistence** – Automatically saves and loads your settings (Keys, Timers) to `settings.json`.
+* **💾 Config Persistence** – Automatically saves and loads your settings (Keys, Timers, Window Position) to `settings.json`.
 
 ## 🛠️ Tech Stack & Dependencies
 
