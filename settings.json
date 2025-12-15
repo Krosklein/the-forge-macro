@@ -1,5 +1,8 @@
 {
   "potion_key": "3",
   "time_key": 15,
-  "window_pos": null
+  "window_pos": [
+    182.0,
+    182.0
+  ]
 }

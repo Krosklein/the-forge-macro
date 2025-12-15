@@ -13,6 +13,7 @@ mod config;
 mod fonts;
 mod macro_forge;
 mod switch_ui;
+mod test;
 
 fn main() {
     let icon = fonts::load_icon();
@@ -77,7 +78,8 @@ fn main() {
                 loaded_config.window_pos,
             )))
         }),
-    );
+    )
+    .expect("Failed to run eframe");
 }
 
 struct MyEguiApp {
@@ -132,7 +134,7 @@ impl MyEguiApp {
 }
 
 impl eframe::App for MyEguiApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.input(|i| {
             if let Some(rect) = i.viewport().outer_rect {
                 self.window_pos = Some((rect.min.x, rect.min.y));

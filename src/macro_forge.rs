@@ -41,18 +41,16 @@ impl MacroBot {
         self.enigo.button(Button::Left, Click)?;
         Ok(())
     }
-    pub fn smooth_move(
-        &mut self,
-        target_x: i32,
-        target_y: i32,
-        steps: i32,
-        delay_ms: u64,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn smooth_move(&mut self, target_x: i32, target_y: i32) -> Result<(), Box<dyn Error>> {
         let window = match get_active_window() {
             Ok(win) => win,
             Err(_) => return Err("Brak aktywnego okna".into()),
         };
         let mut rng = rand::rng();
+
+        let delay_ms: u64 = rng.random_range(10..18);
+        let steps: i32 = rng.random_range(15..25);
+        let shake_parament = rng.random_range(4.0..10.0);
 
         let win_x = window.position.x as f64;
         let win_y = window.position.y as f64;
@@ -65,57 +63,51 @@ impl MacroBot {
         let scale_x = win_w / base_width;
         let scale_y = win_h / base_height;
 
+        let (start_x_i32, start_y_i32) = self.enigo.location()?;
+        let start_x = start_x_i32 as f64;
+        let start_y = start_y_i32 as f64;
+
         let final_target_x = win_x + (target_x as f64 * scale_x);
         let final_target_y = win_y + (target_y as f64 * scale_y);
 
-        let (start_x, start_y) = self.enigo.location()?;
+        let dx = final_target_x - start_x;
+        let dy = final_target_y - start_y;
 
-        let dx = final_target_x - start_x as f64;
-        let dy = final_target_y - start_y as f64;
-
-        let step_x_f = dx / steps as f64;
-        let step_y_f = dy / steps as f64;
+        let control_x = start_x + (dx / 2.0) + rng.random_range(100..300) as f64;
+        let control_y = start_y + (dy / 2.0) + rng.random_range(100..300) as f64;
 
         for i in 1..=steps {
-            let current_x = start_x as f64 + step_x_f * i as f64;
-            let current_y = start_y as f64 + step_y_f * i as f64;
+            let t = i as f64 / steps as f64;
+            let one_minus_t = 1.0 - t;
+
+            let next_x = (one_minus_t.powi(2) * start_x)
+                + (2.0 * one_minus_t * t * control_x)
+                + (t.powi(2) * final_target_x);
+
+            let next_y = (one_minus_t.powi(2) * start_y)
+                + (2.0 * one_minus_t * t * control_y)
+                + (t.powi(2) * final_target_y);
+
+            let jitter_x = rng.random_range(-shake_parament..shake_parament);
+            let jitter_y = rng.random_range(-shake_parament..shake_parament);
 
             self.enigo.move_mouse(
-                current_x.round() as i32,
-                current_y.round() as i32,
+                (next_x + jitter_x).round() as i32,
+                (next_y + jitter_y).round() as i32,
                 Coordinate::Abs,
             )?;
 
             thread::sleep(Duration::from_millis(delay_ms));
         }
-
-        let wiggle_pixels = rng.random_range(10..80) as f64;
-        let wiggle_steps = 10;
-
-        for i in 1..=wiggle_steps {
-            let offset = (wiggle_pixels / wiggle_steps as f64) * i as f64;
-            self.enigo.move_mouse(
-                (final_target_x + offset).round() as i32,
-                final_target_y.round() as i32,
-                Coordinate::Abs,
-            )?;
-            thread::sleep(Duration::from_millis(10));
-        }
-
-        for i in 1..=wiggle_steps {
-            let offset = wiggle_pixels - ((wiggle_pixels / wiggle_steps as f64) * i as f64);
-            self.enigo.move_mouse(
-                (final_target_x + offset).round() as i32,
-                final_target_y.round() as i32,
-                Coordinate::Abs,
-            )?;
-            thread::sleep(Duration::from_millis(10));
-        }
-
+        self.enigo.move_mouse(
+            final_target_x.round() as i32,
+            final_target_y.round() as i32,
+            Coordinate::Abs,
+        )?;
+        thread::sleep(Duration::from_millis(delay_ms));
         Ok(())
     }
 }
-
 pub fn clicker(is_running: Arc<AtomicBool>, is_busy: Arc<AtomicBool>) {
     let mut bot = MacroBot::new();
     let mut rng = rand::rng();
@@ -235,28 +227,28 @@ pub fn sell(is_sell: Arc<AtomicBool>, is_busy: Arc<AtomicBool>, time_key: Arc<Mu
         let _ = bot.key_click('t');
         thread::sleep(Duration::from_millis(1000));
 
-        let _ = bot.smooth_move(730, 1050, 30, 20);
-        thread::sleep(Duration::from_millis(500));
+        let _ = bot.smooth_move(730, 1050);
+        thread::sleep(Duration::from_millis(200));
         let _ = bot.click_release();
 
-        let _ = bot.smooth_move(1770, 490, 60, 40);
-        thread::sleep(Duration::from_millis(500));
+        let _ = bot.smooth_move(1770, 490);
+        thread::sleep(Duration::from_millis(200));
         let _ = bot.click_release();
 
-        let _ = bot.smooth_move(1280, 900, 30, 20);
-        thread::sleep(Duration::from_millis(500));
+        let _ = bot.smooth_move(1280, 900);
+        thread::sleep(Duration::from_millis(200));
         let _ = bot.click_release();
 
-        let _ = bot.smooth_move(1280, 1000, 30, 20);
-        thread::sleep(Duration::from_millis(500));
+        let _ = bot.smooth_move(1280, 1000);
+        thread::sleep(Duration::from_millis(200));
         let _ = bot.click_release();
 
-        let _ = bot.smooth_move(1050, 750, 30, 20);
-        thread::sleep(Duration::from_millis(500));
+        let _ = bot.smooth_move(1050, 750);
+        thread::sleep(Duration::from_millis(200));
         let _ = bot.click_release();
 
-        let _ = bot.smooth_move(1850, 300, 30, 20);
-        thread::sleep(Duration::from_millis(500));
+        let _ = bot.smooth_move(1850, 300);
+        thread::sleep(Duration::from_millis(200));
         let _ = bot.click_release();
 
         let _ = bot.key_click('1');
